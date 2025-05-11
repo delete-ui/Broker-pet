@@ -9,6 +9,7 @@ type Config struct {
 	Env      string
 	Server   Server
 	Postgres Postgres
+	Redis    Redis
 }
 
 type Server struct {
@@ -23,6 +24,10 @@ type Postgres struct {
 	Password string
 	DBName   string
 	SSLMode  string
+}
+
+type Redis struct {
+	Address string
 }
 
 func MustLoad(configName string) *Config {

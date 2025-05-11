@@ -2,10 +2,15 @@ package main
 
 import (
 	"Brocker-pet-project/internal/config"
+	"Brocker-pet-project/internal/handlers"
 	"Brocker-pet-project/internal/logger"
+	"Brocker-pet-project/internal/repository"
 	"Brocker-pet-project/pkg/database"
+	"Brocker-pet-project/pkg/redis"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"log"
+	"net/http"
 )
 
 func main() {
@@ -19,9 +24,25 @@ func main() {
 
 	database.InitDB(cfg)
 
-	DB := database.ReturnDB()
-	defer DB.Close()
+	r := chi.NewRouter()
+
+	dealRepository := repository.NewDealRepository(database.ReturnDB())
+	redisClient := redis.NewRedisClient(cfg)
+
+	dealHandler := handlers.NewDealHandler(dealRepository, redisClient, zaplog)
+
+	r.Post("/api/new_deal", dealHandler.NewDealPost)
+
+	r.Group(func(r chi.Router) {
+		r.Get("/api/all_deals", dealHandler.AllDealsGet)
+		r.Get("/api/all_processed_deals", dealHandler.AllProcessedDealsGet)
+		r.Get("/api/all_not_processed_deals", dealHandler.AllNotProcessedDealsGet)
+	})
 
 	zaplog.Info("Program started")
+
+	if err := http.ListenAndServe(cfg.Server.Port, r); err != nil {
+		log.Fatalf("Error starting server: %v", err)
+	}
 
 }

@@ -18,7 +18,7 @@ func InitLogger(cfg *config.Config) (*zap.Logger, error) {
 		return cfg.Build()
 	default: //local
 		cfg := zap.NewDevelopmentConfig()
-		cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+		cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 		return cfg.Build()
 	}
 
