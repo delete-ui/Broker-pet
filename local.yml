@@ -14,3 +14,6 @@ postgres:
 
 redis:
   address: "localhost:6379"
+
+jwt:
+  token: "s1234tron1234g"

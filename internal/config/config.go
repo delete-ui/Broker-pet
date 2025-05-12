@@ -10,6 +10,7 @@ type Config struct {
 	Server   Server
 	Postgres Postgres
 	Redis    Redis
+	Jwt      Jwt
 }
 
 type Server struct {
@@ -28,6 +29,10 @@ type Postgres struct {
 
 type Redis struct {
 	Address string
+}
+
+type Jwt struct {
+	Token string
 }
 
 func MustLoad(configName string) *Config {
