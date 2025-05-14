@@ -5,6 +5,7 @@ import (
 	"Brocker-pet-project/internal/handlers"
 	"Brocker-pet-project/internal/logger"
 	"Brocker-pet-project/internal/repository"
+	worker2 "Brocker-pet-project/internal/worker"
 	"Brocker-pet-project/pkg/database"
 	"Brocker-pet-project/pkg/middleware"
 	"Brocker-pet-project/pkg/redis"
@@ -12,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -44,6 +46,21 @@ func main() {
 		r.Get("/api/all_not_processed_deals", dealHandler.AllNotProcessedDealsGet)
 	})
 
+	profitRepository := repository.NewProfitRepository(database.ReturnDB())
+
+	dealWorker := worker2.NewDealWorker(zaplog, dealRepository, profitRepository)
+
+	go func() {
+		var res bool
+
+		for res {
+			time.Sleep(10 * time.Second)
+			dealWorker.MarkAsProcessed()
+		}
+	}()
+
+	dealWorker.MarkAsProcessed()
+
 	r.Handle("/", middleware.AuthMiddleware(protectedRoute))
 
 	zaplog.Info("Program started")
@@ -54,4 +71,4 @@ func main() {
 
 }
 
-//TODO: Create protected route
+//TODO: CREATING PROTECTED ROUTES, REDIS DEL IN MARKASPROCESSED FUNC, CREATE PROTECTED ROUTES FOR PROFIT

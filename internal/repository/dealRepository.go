@@ -136,7 +136,7 @@ func (h *DealRepository) GetAllDeals(ctx context.Context) *[]models.Deal {
 
 }
 
-func (h *DealRepository) MarkTransactionAsProcessed(id float64) *models.Deal {
+func (h *DealRepository) MarkTransactionAsProcessed(id int64) *models.Deal {
 
 	query := `UPDATE transactions 
 	SET status=$1

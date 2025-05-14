@@ -3,11 +3,13 @@ package config
 import (
 	"github.com/spf13/viper"
 	"log"
+	"time"
 )
 
 type Config struct {
 	Env      string
 	Server   Server
+	Worker   Worker
 	Postgres Postgres
 	Redis    Redis
 	Jwt      Jwt
@@ -16,6 +18,10 @@ type Config struct {
 type Server struct {
 	Host string
 	Port string
+}
+
+type Worker struct {
+	ProcessedTimeOut time.Duration
 }
 
 type Postgres struct {

@@ -18,3 +18,9 @@ type LogUserResponse struct {
 	Username string `json:"username"`
 	Status   string `json:"status"`
 }
+
+type ProfitSQLDeal struct {
+	Id        int64
+	DealId    int64
+	AllProfit float64
+}
