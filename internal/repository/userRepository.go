@@ -14,7 +14,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (h *UserRepository) NewUser(username, password string) *models.User {
+func (h *UserRepository) NewUser(username, password string) *models.NewUserResponse {
 	query := `INSERT INTO users 
     (username,password) 
 	VALUES ($1,$2)
@@ -22,7 +22,7 @@ func (h *UserRepository) NewUser(username, password string) *models.User {
 
 	row := h.db.QueryRow(query, username, password)
 
-	var user models.User
+	var user models.NewUserResponse
 
 	if err := row.Scan(&user.Id, &user.Username); err != nil {
 		log.Printf("Error scaning sql response: %v", err)

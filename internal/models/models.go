@@ -14,6 +14,11 @@ type User struct {
 	Password string `json:"password"` //in a real project, store a hash
 }
 
+type NewUserResponse struct {
+	Id       int64  `json:"id"`
+	Username string `json:"username"`
+}
+
 type LogUserResponse struct {
 	Username string `json:"username"`
 	Status   string `json:"status"`

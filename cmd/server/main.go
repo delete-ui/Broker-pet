@@ -29,10 +29,12 @@ func main() {
 
 	r := chi.NewRouter()
 
-	dealRepository := repository.NewDealRepository(database.ReturnDB())
-	userRepository := repository.NewUserRepository(database.ReturnDB())
 	redisClient := redis.NewRedisClient(cfg)
+	dealRepository := repository.NewDealRepository(database.ReturnDB(), redisClient)
+	userRepository := repository.NewUserRepository(database.ReturnDB())
+	profitRepository := repository.NewProfitRepository(database.ReturnDB())
 
+	profitHandler := handlers.NewProfitHandler(profitRepository, zaplog)
 	dealHandler := handlers.NewDealHandler(dealRepository, redisClient, zaplog)
 	userHandler := handlers.NewUserHandler(userRepository, zaplog)
 
@@ -40,28 +42,18 @@ func main() {
 	r.Post("/api/registration", userHandler.NewUserPost)
 	r.Get("/api/login", userHandler.LoginIn)
 
-	protectedRoute := r.Group(func(r chi.Router) {
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware)
+
 		r.Get("/api/all_deals", dealHandler.AllDealsGet)
 		r.Get("/api/all_processed_deals", dealHandler.AllProcessedDealsGet)
 		r.Get("/api/all_not_processed_deals", dealHandler.AllNotProcessedDealsGet)
+		r.Get("/api/all_clear_profit", profitHandler.AllClearProfitGET)
 	})
-
-	profitRepository := repository.NewProfitRepository(database.ReturnDB())
 
 	dealWorker := worker2.NewDealWorker(zaplog, dealRepository, profitRepository)
 
-	go func() {
-		var res bool
-
-		for res {
-			time.Sleep(10 * time.Second)
-			dealWorker.MarkAsProcessed()
-		}
-	}()
-
-	dealWorker.MarkAsProcessed()
-
-	r.Handle("/", middleware.AuthMiddleware(protectedRoute))
+	go Worker(dealWorker)
 
 	zaplog.Info("Program started")
 
@@ -71,4 +63,13 @@ func main() {
 
 }
 
-//TODO: CREATING PROTECTED ROUTES, REDIS DEL IN MARKASPROCESSED FUNC, CREATE PROTECTED ROUTES FOR PROFIT
+func Worker(dealWorker *worker2.DealWorker) {
+	res := true
+
+	for res == true {
+		time.Sleep(3 * time.Second)
+		dealWorker.MarkAsProcessed()
+	}
+}
+
+//TODO: TESTS,DOCKER,CI/CD

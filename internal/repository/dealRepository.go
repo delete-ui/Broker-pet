@@ -5,15 +5,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"log"
 )
 
 type DealRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	redis *redis.Client
 }
 
-func NewDealRepository(db *sql.DB) *DealRepository {
-	return &DealRepository{db: db}
+func NewDealRepository(db *sql.DB, redis *redis.Client) *DealRepository {
+	return &DealRepository{db: db, redis: redis}
 }
 
 func (h *DealRepository) CreateNewDeal(title string, expenses, profit float64) *models.Deal {
@@ -156,6 +158,9 @@ func (h *DealRepository) MarkTransactionAsProcessed(id int64) *models.Deal {
 		log.Printf("Error marking transaction as processed: %v", deal)
 		return &deal
 	}
+
+	ctx := context.Background()
+	h.redis.Del(ctx, "notProcessedDeals:all", "processedDeals:all", "allDeals:get")
 
 	return &deal
 

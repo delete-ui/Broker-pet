@@ -2,6 +2,7 @@ package repository
 
 import (
 	"Brocker-pet-project/internal/models"
+	"context"
 	"database/sql"
 	"log"
 )
@@ -35,4 +36,30 @@ func (h *ProfitRepository) AddProfitById(dealId int64, allProfit float64) *model
 
 	return &profit
 
+}
+
+func (h *ProfitRepository) GetAllProfitInfo(ctx context.Context) *[]models.ProfitSQLDeal {
+	query := `SELECT * FROM clear_profit;`
+
+	rows, err := h.db.QueryContext(ctx, query)
+	if err != nil {
+		log.Printf("Error parsing sql response: %v", err)
+		return nil
+	}
+
+	var profits []models.ProfitSQLDeal
+
+	for rows.Next() {
+		var profit models.ProfitSQLDeal
+
+		rows.Scan(&profit.Id, &profit.AllProfit)
+		if profit.Id == 0 {
+			log.Print("Error parsing sql response")
+			return nil
+		}
+		profits = append(profits, profit)
+
+	}
+
+	return &profits
 }
