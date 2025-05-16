@@ -19,7 +19,10 @@ import (
 func main() {
 	fmt.Println("STARTED")
 
-	cfg := config.MustLoad("local.yml")
+	cfg, err := config.ConfigLoader("local.yml")
+	if err != nil {
+		log.Fatalf("Error loading config: %v", err)
+	}
 	zaplog, err := logger.InitLogger(cfg)
 	if err != nil {
 		log.Fatalf("Error initializing logger: %v", err)
@@ -38,13 +41,13 @@ func main() {
 	dealHandler := handlers.NewDealHandler(dealRepository, redisClient, zaplog)
 	userHandler := handlers.NewUserHandler(userRepository, zaplog)
 
-	r.Post("/api/new_deal", dealHandler.NewDealPost)
 	r.Post("/api/registration", userHandler.NewUserPost)
 	r.Get("/api/login", userHandler.LoginIn)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware)
 
+		r.Post("/api/new_deal", dealHandler.NewDealPost)
 		r.Get("/api/all_deals", dealHandler.AllDealsGet)
 		r.Get("/api/all_processed_deals", dealHandler.AllProcessedDealsGet)
 		r.Get("/api/all_not_processed_deals", dealHandler.AllNotProcessedDealsGet)

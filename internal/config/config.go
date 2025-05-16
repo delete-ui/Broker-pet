@@ -41,22 +41,24 @@ type Jwt struct {
 	Token string
 }
 
-func MustLoad(configName string) *Config {
+func ConfigLoader(configName string) (*Config, error) {
 
 	viper.AddConfigPath(".")
 	viper.SetConfigName(configName)
 	viper.SetConfigType("yaml")
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file: %v", err)
+		log.Printf("Error reading config file: %v", err)
+		return nil, err
 	}
 
 	var cfg Config
 
 	if err := viper.Unmarshal(&cfg); err != nil {
-		log.Fatalf("Error unmarshaling config file: %v", err)
+		log.Printf("Error unmarshaling config file: %v", err)
+		return nil, err
 	}
 
-	return &cfg
+	return &cfg, nil
 
 }
