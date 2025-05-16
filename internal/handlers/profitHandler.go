@@ -24,12 +24,6 @@ func (h *ProfitHandler) AllClearProfitGET(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if r.Header.Get("Content-Type") != "application/json" {
-		h.log.Error("Invalid request Content-Type header", zap.String("excepted: ", "application/json"), zap.String("got: ", r.Header.Get("Content-Type")))
-		http.Error(w, "Invalid request Content-Type header", http.StatusUnsupportedMediaType)
-		return
-	}
-
 	profits := h.repo.GetAllProfitInfo(r.Context())
 	if profits == nil {
 		h.log.Error("Error reading sql response")

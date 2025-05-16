@@ -26,7 +26,7 @@ func (h *DealWorker) MarkAsProcessed() {
 		profit := h.profitRepository.AddProfitById(deal.Id, deal.Profit-deal.Expenses)
 
 		if profit.Id == 0 {
-			h.log.Error("Error while processing deal, ", zap.String("deal id: ", string(deal.Id)))
+			h.log.Error("Error while processing deal, ", zap.Int64("deal id: ", deal.Id))
 			return
 		}
 
