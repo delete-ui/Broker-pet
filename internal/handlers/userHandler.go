@@ -54,7 +54,7 @@ func (h *UserHandler) NewUserPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.log.Debug("User post request successfully handled", zap.String("id: ", string(user.Id)), zap.String(" username: ", user.Username))
+	h.log.Debug("User post request successfully handled", zap.Int64("id: ", user.Id), zap.String(" username: ", user.Username))
 
 }
 

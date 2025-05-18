@@ -17,23 +17,29 @@ func NewDealWorker(log *zap.Logger, dealRepository *repository.DealRepository, p
 }
 
 func (h *DealWorker) MarkAsProcessed() {
-
 	ctx := context.Background()
 
 	deals := h.dealRepository.GetAllNotProcessedDeals(ctx)
+	if deals == nil {
+		h.log.Error("Failed to get not processed deals")
+		return
+	}
 
 	for _, deal := range *deals {
 		profit := h.profitRepository.AddProfitById(deal.Id, deal.Profit-deal.Expenses)
-
-		if profit.Id == 0 {
-			h.log.Error("Error while processing deal, ", zap.Int64("deal id: ", deal.Id))
-			return
+		if profit == nil {
+			h.log.Error("Error while adding profit for deal", zap.Int64("deal id", deal.Id))
+			continue // Продолжаем обработку других сделок, а не прерываем полностью
 		}
 
-		h.dealRepository.MarkTransactionAsProcessed(deal.Id)
+		processedDeal := h.dealRepository.MarkTransactionAsProcessed(deal.Id)
+		if processedDeal == nil {
+			h.log.Error("Error while marking deal as processed", zap.Int64("deal id", deal.Id))
+			continue
+		}
 
+		h.log.Debug("Successfully processed deal", zap.Int64("deal id", deal.Id))
 	}
 
-	h.log.Debug("Deals processed successfully")
-
+	h.log.Info("Finished processing deals batch")
 }

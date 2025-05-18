@@ -55,7 +55,7 @@ func (h *DealHandler) NewDealPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.log.Debug("New deal post request successfully handled ", zap.String("deal id: ", string(dealResponse.Id)))
+	h.log.Debug("New deal post request successfully handled ", zap.Int64("deal id: ", dealResponse.Id))
 }
 
 func (h *DealHandler) AllProcessedDealsGet(w http.ResponseWriter, r *http.Request) {

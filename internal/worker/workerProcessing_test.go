@@ -126,7 +126,7 @@ func TestDealWorker_MarkAsProcessed_ErrorInProfit(t *testing.T) {
 	db, dbMock := setupMockDB(t)
 	defer db.Close()
 
-	redisClient, _ := setupMockRedis()
+	redisClient, redisMock := setupMockRedis()
 
 	// Создаем логгер
 	logger := zap.NewNop()
@@ -143,9 +143,12 @@ func TestDealWorker_MarkAsProcessed_ErrorInProfit(t *testing.T) {
 		WillReturnRows(rows)
 
 	// Ожидания для AddProfitById - возвращаем ошибку
-	dbMock.ExpectQuery(`INSERT INTO clear_profit`).
+	dbMock.ExpectQuery(`INSERT INTO clear_profit \(deals_id,all_profit\) VALUES \(\$1,\$2\) RETURNING id, deals_id,all_profit`).
 		WithArgs(testDeal.Id, testDeal.Profit-testDeal.Expenses).
 		WillReturnError(errors.New("database error"))
+
+	// Не ожидаем вызов Redis DEL, так как при ошибке он не должен вызываться
+	// (убрали ExpectDel полностью)
 
 	// Создаем репозитории с моками
 	dealRepo := repository.NewDealRepository(db, redisClient)
@@ -159,6 +162,7 @@ func TestDealWorker_MarkAsProcessed_ErrorInProfit(t *testing.T) {
 
 	// Проверяем, что все ожидания выполнены
 	assert.NoError(t, dbMock.ExpectationsWereMet())
+	assert.NoError(t, redisMock.ExpectationsWereMet())
 }
 
 func TestDealWorker_MarkAsProcessed_ErrorInMarking(t *testing.T) {
@@ -166,7 +170,7 @@ func TestDealWorker_MarkAsProcessed_ErrorInMarking(t *testing.T) {
 	db, dbMock := setupMockDB(t)
 	defer db.Close()
 
-	redisClient, _ := setupMockRedis()
+	redisClient, redisMock := setupMockRedis()
 
 	// Создаем логгер
 	logger := zap.NewNop()
@@ -186,14 +190,17 @@ func TestDealWorker_MarkAsProcessed_ErrorInMarking(t *testing.T) {
 	profitRow := sqlmock.NewRows([]string{"id", "deals_id", "all_profit"}).
 		AddRow(1, testDeal.Id, testDeal.Profit-testDeal.Expenses)
 
-	dbMock.ExpectQuery(`INSERT INTO clear_profit`).
+	dbMock.ExpectQuery(`INSERT INTO clear_profit \(deals_id,all_profit\) VALUES \(\$1,\$2\) RETURNING id, deals_id,all_profit`).
 		WithArgs(testDeal.Id, testDeal.Profit-testDeal.Expenses).
 		WillReturnRows(profitRow)
 
 	// Ожидания для MarkTransactionAsProcessed - ошибка
-	dbMock.ExpectQuery(`UPDATE transactions`).
+	dbMock.ExpectQuery(`UPDATE transactions SET status=\$1 WHERE id=\$2 RETURNING id, title, expenses, profit, status`).
 		WithArgs("processed", testDeal.Id).
 		WillReturnError(errors.New("update error"))
+
+	// Не ожидаем вызов Redis DEL, так как при ошибке он не должен вызываться
+	// (убрали ExpectDel полностью)
 
 	// Создаем репозитории с моками
 	dealRepo := repository.NewDealRepository(db, redisClient)
@@ -207,4 +214,5 @@ func TestDealWorker_MarkAsProcessed_ErrorInMarking(t *testing.T) {
 
 	// Проверяем, что все ожидания выполнены
 	assert.NoError(t, dbMock.ExpectationsWereMet())
+	assert.NoError(t, redisMock.ExpectationsWereMet())
 }
