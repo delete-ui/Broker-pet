@@ -75,4 +75,4 @@ func Worker(dealWorker *worker2.DealWorker) {
 	}
 }
 
-//TODO: TESTS,DOCKER,CI/CD
+//TODO: CI/CD
